@@ -16,6 +16,18 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
+    .background-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
     input, button {
       padding: 10px;
       margin: 5px;
@@ -24,44 +36,80 @@
 </head>
 
 <body>
-  <h1>随机抽奖</h1>
-  <div>
-    <label for="min">最小值：</label>
-    <input type="number" id="min" />
-  </div>
-  <div>
-    <label for="max">最大值：</label>
-    <input type="number" id="max" />
-  </div>
-  <button id="draw">抽奖</button>
-  <h2 id="result"></h2>
+<h1>随机抽奖</h1>
+<div id="background" class="background-image"></div>
+<div>
+  <label for="min">最小值：</label>
+  <input type="number" id="min" />
+</div>
+<div>
+  <label for="max">最大值：</label>
+  <input type="number" id="max" />
+</div>
+<div>
+  <label for="count">抽取数：</label>
+  <input type="number" id="count" />
+</div>
+<button id="draw">开始抽奖</button>
+<h2 id="result"></h2>
 
-  <script>
-    function getRandomInt(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+<script>
+  async function setBackground() {
+    const apiKey = '2GlkaDoCxvq-k_GO5FDRYHd25nJf0of47nJ3wy3PzE4';
+    const url = `https://api.unsplash.com/photos/random?query=youth&client_id=${apiKey}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      document.getElementById('background').style.backgroundImage = `url('${data.urls.regular}')`;
+    } catch (error) {
+      console.error('Error fetching Unsplash image:', error);
+    }
+  }
+
+  setBackground();
+
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function drawNNumbers(min, max, count) {
+    const numbers = new Set();
+    if (max - min + 1 < count) {
+      count = max - min + 1;
+    }
+    while (numbers.size < count) {
+      numbers.add(getRandomInt(min, max));
+    }
+    return Array.from(numbers);
+  }
+
+  document.getElementById("draw").addEventListener("click", function() {
+    const min = parseInt(document.getElementById("min").value);
+    const max = parseInt(document.getElementById("max").value);
+    const count = parseInt(document.getElementById("count").value);
+
+    if (isNaN(min) || isNaN(max) || isNaN(count)) {
+      alert("请填写最小值、最大值和抽取数量");
+      return;
     }
 
-    document.getElementById("draw").addEventListener("click", function() {
-      const min = parseInt(document.getElementById("min").value);
-      const max = parseInt(document.getElementById("max").value);
+    if (min > max) {
+      alert("最小值不能大于最大值");
+      return;
+    }
 
-      if (isNaN(min) || isNaN(max)) {
-        alert("请填写最小值和最大值");
-        return;
-      }
+    if (count < 1) {
+      alert("抽取数量必须大于0");
+      return;
+    }
 
-      if (min > max) {
-        alert("最小值不能大于最大值");
-        return;
-      }
-
-      const winningNumber = getRandomInt(min, max);
-      document.getElementById("result").innerText = "中奖数字是: " + winningNumber;
-    });
-  </script>
+    const winningNumbers = drawNNumbers(min, max, count);
+    document.getElementById("result").innerText = "中奖数字是: " + winningNumbers.join(', ');
+  });
+</script>
 </body>
 
 </html>
-
